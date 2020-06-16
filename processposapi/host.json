@@ -1,0 +1,20 @@
+{
+    "version": "2.0",
+    "logging": {
+        "applicationInsights": {
+            "samplingExcludedTypes": "Request",
+            "samplingSettings": {
+                "isEnabled": true
+            }
+        }
+    },
+    "extensions": {
+        "eventHubs": {
+            "batchCheckpointFrequency": 32,
+            "eventProcessorOptions": {
+                "maxBatchSize": 64,
+                "prefetchCount": 256
+            }
+        }
+    }
+}

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Microsoft.Azure.Cosmos.Table;
+using Microsoft.Azure.ServiceBus;
 
 namespace processposapi
 {
@@ -21,6 +22,7 @@ namespace processposapi
         [FunctionName("processpos")]
         public static async Task Run([EventHubTrigger("khsvrlessohehpos", Connection = "POSStorage")] EventData[] events,
             [Table("salesevents"), StorageAccount("AzureWebJobsStorage")] CloudTable msg,
+            [ServiceBus("khsvrlessohsbtopic", Connection = "PUBSUBConnection")] IAsyncCollector<Message> topicCollector,
             ILogger log)
         {
             var exceptions = new List<Exception>();
@@ -47,6 +49,32 @@ namespace processposapi
                     var operation = TableOperation.Insert(salesEventsTable);
                     await msg.ExecuteAsync(operation);
                     log.LogInformation($"Added salesevents entry {salesNumber} to SalesEventsTable completed.");
+
+                    // Add to Pub/Sub only if Receipt Exists
+                    log.LogInformation($"Started Pub/Sub entry {salesNumber}.");
+                    if ((string)data.header.receiptUrl != null)
+                    {
+                        log.LogInformation($"Pub/Sub entry {salesNumber} receipt found.");
+                        PubSubMessage pubSubContent = new PubSubMessage();
+                        pubSubContent.TotalItems = data.details.Count;
+                        pubSubContent.TotalCost = data.header.totalCost;
+                        pubSubContent.SalesNumber = data.header.salesNumber;
+                        pubSubContent.SalesDate = data.header.dateTime;
+                        pubSubContent.StoreLocation = data.header.locationId;
+                        pubSubContent.ReceiptUrl = data.header.receiptUrl;
+                        string psContent = JsonConvert.SerializeObject(pubSubContent);
+                        log.LogInformation($"psContent: {psContent}");
+                        Microsoft.Azure.ServiceBus.Message message = new Microsoft.Azure.ServiceBus.Message();
+                        message.Body = Encoding.UTF8.GetBytes(psContent);
+                        message.UserProperties.Add("totalCost", (double)data.header.totalCost);
+                        await topicCollector.AddAsync(message);
+                        //await Task.FromResult<Message>(message);
+                    }
+                    else
+                    {
+                        log.LogInformation($"Pub/Sub entry {salesNumber} no receipt found.");
+                    }
+                    log.LogInformation($"Started Pub/Sub entry {salesNumber} completed.");
                 }
                 catch (Microsoft.Azure.Cosmos.Table.StorageException exc)
                 {
@@ -56,7 +84,7 @@ namespace processposapi
                     }
                     else
                     {
-                        log.LogError($"Storing entry {salesNumber} to salesevents Table failed with status code {exc.RequestInformation.HttpStatusCode} and message {exc.Message}");
+                        log.LogError($"Storing entry {salesNumber} to salesevents Table failed: {exc.Message}");
                         exceptions.Add(exc);
                     }
                 }
@@ -64,7 +92,7 @@ namespace processposapi
                 {
                     // We need to keep processing the rest of the batch - capture this exception and continue.
                     // Also, consider capturing details of the message that failed processing so it can be processed again later.
-                    log.LogError($"Storing entry {salesNumber} to salesevents Table failed: {exc.Message}");
+                    log.LogError($"Storing entry {salesNumber} to salesevents Table failed with exception type {exc.GetType().ToString()} and error message: {exc.Message}");
                     exceptions.Add(exc);
                 }
             }

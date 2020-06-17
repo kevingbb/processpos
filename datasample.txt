@@ -1,0 +1,43 @@
+{
+    "header": {
+        "salesNumber": "0c423398-3c7c-0682-7519-4701c445ed7a",
+        "dateTime": "2019-09-11T06:04:43.6819622-07:00",
+        "locationId": "00d8ea6f-935c-2cca-9bbc-f56b5a091621",
+        "locationName": "Lorena's Ice Cream Parlor",
+        "locationAddress": "865 Olson Cape",
+        "locationPostcode": "03030",
+        "totalCost": "123.40",
+        "totalTax": "12.34",
+        "receiptUrl": "https://serverlessohsales.blob.core.windows.net/TheReceipt.pdf"
+    },
+    "details":
+    [
+        {
+            "productId": "65ab124a-9b2c-4294-a52d-18839364ef15",
+            "quantity": "10",
+            "unitCost": "10.40",
+            "totalCost": "104.00",
+            "totalTax": "10.40",
+            "productName": "Durian Durian",
+            "productDescription": "Smells suspect but tastes... also suspect."
+        },
+        {
+            "productId": "75542e38-563f-436f-adeb-f426f1dabb5c",
+            "quantity": "1",
+            "unitCost": "3.40",
+            "totalCost": "3.40",
+            "totalTax": "0.34",
+            "productName": "Starfruit Explosion",
+            "productDescription": "This starfruit ice cream is out of this world!"
+        },
+        {
+            "productId": "80bab959-ef8b-4ae3-8bf2-e876d77277b6",
+            "quantity": "2",
+            "unitCost": "8.00",
+            "totalCost": "16.00",
+            "totalTax": "1.60",
+            "productName": "French Vanilla",
+            "productDescription": "It's vanilla ice cream."
+        }
+    ]
+}
